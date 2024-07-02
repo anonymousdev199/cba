@@ -7,12 +7,15 @@ import {
   Wallet
 } from '@coral-xyz/anchor'
 import { bigInt } from 'snarkjs'
-import { parse as tomlParse } from 'toml'
-import { readFileSync } from 'fs'
 
 import idl from './otter_cash_idl.json'
 
-const rpc = tomlParse(readFileSync('./rpc.toml', 'utf8'))
+require('dotenv').config()
+
+const rpc = {
+  devnet: process.env.DEVNET_RPC || '',
+  mainnet: process.env.MAINNET_RPC || ''
+}
 if (rpc.devnet.startsWith('http') || rpc.mainnet.startsWith('http')) {
   throw new Error('RPC URL strings must not contain protocol prefixes.')
 }
@@ -272,7 +275,13 @@ export async function allWithdrawAdvance (withdrawState: web3.Keypair) {
   // While the linearPhase is not maximum, continue sending newly-signed transactions.
   let iterNum = 0
   while (true) {
-    const linearPhase = await getLinearPhase()
+    let linearPhase
+    try {
+      linearPhase = await getLinearPhase()
+    } catch (error) {
+      console.log('get linearPhase error:', error)
+      throw error
+    }
     console.log(`linearPhase = ${linearPhase}`)
     if (linearPhase === 20086) {
       console.log('Reached max linearPhase')
@@ -301,11 +310,35 @@ export async function allWithdrawAdvance (withdrawState: web3.Keypair) {
       withdrawAdvanceTxs.slice(0, numTxsToSend)
     )
     await Promise.all(signedTxs.map(async tx => {
-      const rawTx = tx.serialize()
-      return await provider.connection.sendRawTransaction(
-        rawTx,
-        { skipPreflight: true, maxRetries: maxRetries }
-      )
+      try {
+        const rawTx = tx.serialize()
+        const txid = await provider.connection.sendRawTransaction(
+          rawTx,
+          { skipPreflight: true, maxRetries: maxRetries }
+        )
+        console.log('txid', txid)
+        return txid
+      } catch (error) {
+        try {
+          console.log('retry', error)
+          const rawTx = tx.serialize()
+          const txid = await provider.connection.sendRawTransaction(
+            rawTx,
+            { skipPreflight: true, maxRetries: maxRetries }
+          )
+          console.log('txid', txid)
+          return txid
+        } catch (error) {
+          console.log('retry 2', error)
+          const rawTx = tx.serialize()
+          const txid = await provider.connection.sendRawTransaction(
+            rawTx,
+            { skipPreflight: true, maxRetries: maxRetries }
+          )
+          console.log('txid', txid)
+          return txid
+        }
+      }
     }))
     await sleep(sleepTime)
     iterNum += 1

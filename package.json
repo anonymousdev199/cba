@@ -9,12 +9,14 @@
     "kill-and-build": "npm run kill; sudo docker build . --network host -t relayer",
     "relay:devnet": "npm run kill-and-build; sudo docker run --network host relayer --network devnet --fee 15000000",
     "relay:mainnet": "npm run kill-and-build; sudo docker run --network host relayer --network mainnet --fee 15000000",
-    "lint": "eslint . --ext .ts --fix --config ./.eslintrc.js --no-eslintrc"
+    "lint": "eslint . --ext .ts --fix --config ./.eslintrc.js --no-eslintrc",
+    "main": "npx ts-node relay.ts"
   },
   "author": "Christopher Bender (chris@otter.cash)",
   "license": "ISC",
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
+    "dotenv": "^16.4.5",
     "express": "^4.17.2",
     "snarkjs": "git+https://github.com/otter-cash/snarkjs.git#0f6f3f4707f15abc79d68408a41f5c446d36d2f5",
     "ts-command-line-args": "^2.2.1"

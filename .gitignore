@@ -10,3 +10,4 @@ wallet.json
 # RPC info.
 rpc.toml
 
+.env

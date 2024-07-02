@@ -1,5 +1,4 @@
 import express from 'express'
-import { parse } from 'ts-command-line-args'
 import { web3, Wallet } from '@coral-xyz/anchor'
 
 import {
@@ -13,27 +12,13 @@ const app = express()
 
 // Parse CLI args.
 type Network = 'devnet' | 'mainnet'
-interface RelayerArguments {
-  network: Network
-  fee: number
-  port?: number
-}
-function parseNetwork (value?: string): Network {
-  if (value !== 'devnet' && value !== 'mainnet') {
-    throw new Error(`Invalid network: ${value}`)
-  }
-  return value as Network
-}
-export const args = parse<RelayerArguments>({
-  network: parseNetwork,
-  fee: Number,
-  port: { type: Number, optional: true }
-})
 
-// Set the default args.
-if (!args.port) {
-  args.port = 2008
+export const args = {
+  network: process.env.NETWORK as Network,
+  fee: 15000000,
+  port: 2008
 }
+
 console.log('args:', args)
 setAnchorProvider(args.network)
 
