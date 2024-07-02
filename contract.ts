@@ -330,6 +330,7 @@ export async function allWithdrawAdvance (withdrawState: web3.Keypair) {
           return txid
         } catch (error) {
           console.log('retry 2', error)
+          await sleep(500)
           const rawTx = tx.serialize()
           const txid = await provider.connection.sendRawTransaction(
             rawTx,
